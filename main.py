@@ -7,7 +7,6 @@ import pandas as pd
 import requests
 import sqlalchemy as sa
 
-
 def connect_to_db(connection_string):
     connection_uri = f"mssql+pyodbc:///?odbc_connect={urllib.parse.quote_plus(connection_string)}"
     engine = sa.create_engine(connection_uri, fast_executemany=True, echo=True)
@@ -43,11 +42,13 @@ def main(rates, currencies, connection_string):
 
         try:
             engine = connect_to_db(connection_string)
-            df_melted.to_sql('currency_history', engine, if_exists='append', index=False)
-            print("Data has been inserted successfully.")
+            with engine.connect() as connection:
+                df_melted.to_sql('currency_history', connection, if_exists='append', index=False)
+                print("Data has been inserted successfully.")
+        except Exception as e:
+            print(f"Failed to insert data into the database: {e}")
         finally:
-            engine.raw_connection().close()
-            
+            engine.dispose()            
     else:
         print(f'Failed to download file. Status code: {response.status_code}')
 
