@@ -2,7 +2,6 @@ import json
 import os
 import urllib
 from datetime import datetime, timedelta
-import openpyxl
 import pandas as pd
 import requests
 import sqlalchemy as sa
