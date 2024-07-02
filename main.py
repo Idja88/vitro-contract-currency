@@ -38,7 +38,7 @@ def main(rates, currencies, connection_string):
         df = pd.read_excel(file_path, engine='openpyxl')
         df_melted = df.melt(id_vars=['Date'], value_vars=currencies, var_name='CurrencyCode', value_name='CurrencyValue')
         df_melted.columns = ['DATE', 'CurrencyCode', 'CurrencyValue']
-        df_melted['DATE'] = pd.to_datetime(df_melted['DATE'], infer_datetime_format=True)
+        df_melted['DATE'] = pd.to_datetime(df_melted['DATE'], format='%d.%m.%Y', errors='coerce')
 
         try:
             engine = connect_to_db(connection_string)
