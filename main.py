@@ -53,10 +53,8 @@ def load_data(df, connection_string):
         with engine.connect() as connection:
             df.to_sql('currency_history', connection, if_exists='append', index=False)
             print("Data has been inserted successfully.")
-    except Exception as e:
-            print(f"Failed to insert data into the database: {e}")
     finally:
-        engine.dispose()      
+        engine.dispose()
 
 def send_email(subject, message, from_email, to_emails, smtp_server, smtp_port):
     try:
