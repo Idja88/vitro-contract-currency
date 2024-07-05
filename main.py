@@ -56,6 +56,9 @@ def main(rates, currencies, connection_string, begin_date):
         print(f'File saved as {file_path}')
 
         df = pd.read_excel(file_path, engine='openpyxl')
+        for currency in currencies:
+            quant_column = f"{currency}_quant"
+            df[currency] = df[currency] / df[quant_column]
         df_melted = df.melt(id_vars=['Date'], value_vars=currencies, var_name='CurrencyCode', value_name='CurrencyValue')
         df_melted.columns = ['DATE', 'CurrencyCode', 'CurrencyValue']
         df_melted['DATE'] = pd.to_datetime(df_melted['DATE'], format='%d.%m.%Y', errors='coerce')
