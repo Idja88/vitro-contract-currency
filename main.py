@@ -51,7 +51,6 @@ def load_data(df, connection_string):
     try:
         engine = connect_to_db(connection_string)
         with engine.connect() as connection:
-            print(df)
             df.to_sql('currency_history', connection, if_exists='append', index=False)
             print("Data has been inserted successfully.")
     except Exception as e:
