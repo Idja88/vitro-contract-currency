@@ -27,10 +27,28 @@
     }
 }
 ```
-`begin_date` - параметр, обозначающий, с какой даты по текущую необходимо получить исторический курс валют. Дату необходимо указывать в формате `%d.%m.%YYYY`.Если параметр не указан и остаётся пустым, то данные загружаются за текущий день. 
-`connection_string` - параметр, строка подключения к базе данных MS SQL SERVER.
-`currency_code` - параметр, обозначающий, перечисление кодов валют и их идентификаторов на сайте национального банка РК. В качестве ключа параметра используется код валюты по стандарту ISO 4217 он же CurrencyCode, а в качестве значения используется Rate, ниже приведена таблица всех валют, по которым можно получить данные подставив необходимые значения.
-`mail_message` - составной параметр, указывающий подключение к SMTP серверу, а также перечень электронных адресов, на которые должно приходить уведомление при ошибках в работе ETL.
+* `begin_date` - параметр, обозначающий, с какой даты по текущую необходимо получить исторический курс валют. Дату необходимо указывать в формате `%d.%m.%YYYY`. Если параметр не указан и остаётся пустым, то данные загружаются за текущий день.
+* `connection_string` - параметр, строка подключения к базе данных MS SQL SERVER.
+* `currency_code` - параметр, обозначающий, перечисление кодов валют и их идентификаторов на сайте национального банка РК. В качестве ключа параметра используется код валюты по стандарту ISO 4217 он же CurrencyCode, а в качестве значения используется Rate, ниже приведена таблица всех валют, по которым можно получить данные подставив необходимые значения.
+* `mail_message` - составной параметр, указывающий подключение к SMTP серверу, а также перечень электронных адресов, на которые должно приходить уведомление при ошибках в работе ETL.
+
+2. Создание необходимой таблицы БД
+
+```sql
+CREATE TABLE [dbo].[currency_history](
+	[ID] [bigint] IDENTITY(1,1) NOT NULL,
+	[Date] [datetime] NOT NULL,
+	[CurrencyCode] [nvarchar](255) NOT NULL,
+	[CurrencyValue] [float] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Date] ASC,
+	[CurrencyCode] ASC
+) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+```
+
+##### Таблица кодов валют
 
 | Quantity | CurrencyName                                      | CurrencyCode | Rate |
 |----------|---------------------------------------------------|--------------|------|
@@ -73,19 +91,3 @@
 | 1        | ЮЖНО-АФРИКАНСКИЙ РАНД                             | ZAR          | 40   |
 | 100      | ЮЖНО-КОРЕЙСКИХ ВОН                                | KRW          | 25   |
 | 1        | ЯПОНСКАЯ ЙЕНА                                     | JPY          | 26   |
-
-2. Создание необходиой таблицы БД
-
-```sql
-CREATE TABLE [dbo].[currency_history](
-	[ID] [bigint] IDENTITY(1,1) NOT NULL,
-	[Date] [datetime] NOT NULL,
-	[CurrencyCode] [nvarchar](255) NOT NULL,
-	[CurrencyValue] [float] NOT NULL,
-PRIMARY KEY CLUSTERED 
-(
-	[Date] ASC,
-	[CurrencyCode] ASC
-) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-```
