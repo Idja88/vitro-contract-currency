@@ -9,20 +9,42 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-def get_exchange_rates(rates, begin_date):
-    end_date = datetime.now()
-    end_date_str = end_date.strftime('%d.%m.%Y')
+class DateValidationError(Exception):
+    pass
+
+class DateLogicError(Exception):
+    pass
+
+def validate_date(date_string):
+    try:
+        datetime.strptime(date_string, '%d.%m.%Y')
+        return True
+    except ValueError:
+         raise DateValidationError(f"Invalid date format: {date_string}")
+
+def get_exchange_rates(rates, begin_date, end_date):
+    if end_date == "":
+        end_date = datetime.now()
+        end_date_str = end_date.strftime('%d.%m.%Y')
+    elif validate_date(end_date) == True:
+        end_date_str = end_date
+
     if begin_date == "":
         begin_date = end_date - timedelta(days=0)
         begin_date_str = begin_date.strftime('%d.%m.%Y')
-    else: 
+    elif validate_date(begin_date) == True:
         begin_date_str = begin_date
+
+    if begin_date > end_date:
+        raise DateLogicError(f"{begin_date} cannot be later than {end_date}.")
+
     url = 'https://nationalbank.kz/ru/exchangerates/ezhednevnye-oficialnye-rynochnye-kursy-valyut/excel'
     params = {
         'beginDate': begin_date_str,
         'endDate': end_date_str,
         'rates[]': rates
     }
+
     response = requests.get(url, params=params)
     if response.status_code == 200:
         filename = 'exchange_rates.xlsx'
@@ -30,7 +52,9 @@ def get_exchange_rates(rates, begin_date):
         with open(file_path, 'wb') as file:
             file.write(response.content)
         print(f'File saved as {file_path}')
-    return file_path
+        return file_path
+    else:
+        raise requests.exceptions.HTTPError(f"Failed to download file. Status code: {response.status_code}")
 
 def transform_data(file_path, currencies):
     df = pd.read_excel(file_path, engine='openpyxl')
@@ -71,8 +95,8 @@ def send_email(subject, message, from_email, to_emails, smtp_server, smtp_port):
     finally:
         server.quit()
 
-def main(rates, currencies, connection_string, begin_date):
-    file_path = get_exchange_rates(rates=rates, begin_date=begin_date)
+def main(rates, currencies, connection_string, begin_date, end_date):
+    file_path = get_exchange_rates(rates=rates, begin_date=begin_date, end_date=end_date)
     transformed_df = transform_data(file_path=file_path, currencies=currencies)
     load_data(transformed_df, connection_string=connection_string)
 
@@ -81,6 +105,7 @@ if __name__ == "__main__":
     with open(config_path, "r", encoding="utf-8") as config_file:
         config = json.load(config_file)
         begin_date = config['begin_date']
+        end_date = config['end_date']
         currencies = list(config['currency_code'].keys())
         rates = list(config['currency_code'].values())
         connection_string = config['connection_string']
@@ -90,7 +115,7 @@ if __name__ == "__main__":
         smtp_port = config['mail_message']['smtp_port']
 
     try:
-        main(rates=rates, currencies=currencies, connection_string=connection_string, begin_date=begin_date)
+        main(rates=rates, currencies=currencies, connection_string=connection_string, begin_date=begin_date, end_date=end_date)
     except Exception as e:
         error_message = f"An error occurred: {str(e)}"
         send_email("Error in ETL process", error_message, from_email, to_emails, smtp_server, smtp_port)
