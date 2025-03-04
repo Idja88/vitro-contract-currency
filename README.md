@@ -52,6 +52,8 @@ PRIMARY KEY CLUSTERED
 
 ## Таблица кодов валют
 
+Данные таблицы получены при помощи [скрейпинга](https://github.com/Idja88/vitro-contract-currency-scrap)
+
 | Quantity | CurrencyName                                      | CurrencyCode | Rate |
 |----------|---------------------------------------------------|--------------|------|
 | 1        | АВСТРАЛИЙСКИЙ ДОЛЛАР                              | AUD          | 1    |
