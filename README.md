@@ -2,7 +2,7 @@
 
 ## Описание
 
-Проект представляет собой ETL-процесс, который загружает данные с сайта национального банка РК по курсам валют в виде Excel-файла, трансформирует их под соотношение валют 1:1, и загружает их в базу данных MS SQL Server, для дальнейшего построения отчета на платформе SSRS.
+Проект представляет собой ETL-процесс, который загружает данные с сайта национального банка РК по курсам валют в виде Excel-файла, трансформирует их под соотношение валют 1:1, и загружает их в базу данных MS SQL Server или PostgreSQL, для дальнейшего построения отчета.
 
 ## Настройка
 
@@ -10,6 +10,10 @@
 
 ```json
 {
+    "url": "https://nationalbank.kz/ru/exchangerates/ezhednevnye-oficialnye-rynochnye-kursy-valyut/excel",
+    "temp_path": "",
+    "table_name": "currency_history",
+    "table_schema": "",
     "begin_date": "",
     "end_date": "",
     "currency_code": {
@@ -24,31 +28,47 @@
             "your2@email.com"
         ],
         "smtp_server": "mail.server.com",
-        "smtp_port": 25
+        "smtp_port": 25,
+        "smtp_login": "your_smtp_username",
+        "smtp_password": "your_smtp_password"
     }
 }
 ```
+* `url` - параметр, обозначающий URL-адрес национального банка РК, с которого можно получить Excel-файл с курсами валют.
+* `temp_path` - параметр, обозначающий путь к папке, в которую будет сохраняться загруженный с сайта национального банка РК Excel-файл.
+* `table_name` - параметр, обозначающий имя таблицы в базе данных, в которую будут загружаться данные.
+* `table_schema` - параметр, обозначающий схему таблицы в базе данных. Может быть пустым, если используется схема по умолчанию.
 * `begin_date` - параметр, обозначающий, с какой даты необходимо получить исторический курс валют. Если параметр не указан и остаётся пустым, то данные загружаются на основании параметра `end_date`. Дату необходимо указывать в формате `DD.MM.YYYY`.
 * `end_date` - параметр, обозначающий, по какую дату необходимо получить исторический курс валют. Если параметр не указан и остаётся пустым, то данные загружаются по текущий день. Дату необходимо указывать в формате `DD.MM.YYYY`.
-* `connection_string` - параметр, строка подключения к базе данных MS SQL SERVER.
+* `connection_string` - параметр, строка подключения к базе данных MS SQL SERVER. Обязательно должен содержать название драйвера для подключения к БД.
 * `currency_code` - параметр, обозначающий, перечисление кодов валют и их идентификаторов на сайте национального банка РК. В качестве ключа параметра используется код валюты по стандарту ISO 4217 он же CurrencyCode, а в качестве значения используется Rate, ниже приведена таблица всех валют, по которым можно получить данные подставив необходимые значения.
 * `mail_message` - составной параметр, указывающий подключение к SMTP серверу, а также перечень электронных адресов, на которые должно приходить уведомление при ошибках в работе ETL.
 
 2. Создание необходимой таблицы БД
 
+
+Создание таблицы `currency_history` в базе данных MS SQL Server:
 ```sql
-CREATE TABLE [dbo].[currency_history](
-	[ID] [bigint] IDENTITY(1,1) NOT NULL,
-	[Date] [datetime] NOT NULL,
-	[CurrencyCode] [nvarchar](255) NOT NULL,
-	[CurrencyValue] [float] NOT NULL,
-PRIMARY KEY CLUSTERED 
-(
-	[Date] ASC,
-	[CurrencyCode] ASC
-) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
+CREATE TABLE [dbo].[currency_history] (
+    [id]            BIGINT IDENTITY(1,1) NOT NULL,
+    [date]          DATETIME             NOT NULL,
+    [currency_code]  NVARCHAR(255)        NOT NULL,
+    [currency_value] DECIMAL(10, 4)       NOT NULL,
+    PRIMARY KEY ([date], [currency_code])
+);
 ```
+
+Создание таблицы `currency_history` в базе данных PostgreSQL в схеме `external`:
+```sql
+CREATE TABLE external.currency_history (
+    id              BIGSERIAL,
+    date           DATE            NOT NULL,
+    currency_code  VARCHAR(255)    NOT NULL,
+    currency_value NUMERIC(10, 4)  NOT NULL,
+    PRIMARY KEY (date, currency_code)
+);
+```
+
 
 ## Таблица кодов валют
 

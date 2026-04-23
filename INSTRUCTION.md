@@ -14,7 +14,11 @@
 
 Пример файла `config.json` после обновления:
 ```json
-{
+{ 
+  "url": "https://nationalbank.kz/ru/exchangerates/ezhednevnye-oficialnye-rynochnye-kursy-valyut/excel",
+  "temp_path": "C:\\Windows\\Temp",
+  "table_name": "currency_history",
+  "table_schema": "",
   "begin_date": "24.06.2024",
   "end_date": "",
   "currency_code": {
@@ -25,7 +29,9 @@
     "from_email": "your_email@example.com",
     "to_emails": ["recipient1@example.com", "recipient2@example.com"],
     "smtp_server": "your_smtp_server",
-    "smtp_port": 25
+    "smtp_port": 25,
+    "smtp_login": "your_smtp_username",
+    "smtp_password": "your_smtp_password"
   }
 }
 ```
@@ -44,7 +50,7 @@
 
 Пример запроса:
 ```sql
-select * from currency_history where CurrencyCode = 'CNY' and Date = '24.06.2024'
+select * from currency_history where currency_code = 'CNY' and date = '24.06.2024'
 ```
 
 ### Шаг 4: Обновление файла конфигурации `config.json` для автоматического запуска
@@ -59,22 +65,28 @@ select * from currency_history where CurrencyCode = 'CNY' and Date = '24.06.2024
 Пример файла `config.json` после обновления:
 ```json
 {
+  "url": "https://nationalbank.kz/ru/exchangerates/ezhednevnye-oficialnye-rynochnye-kursy-valyut/excel",
+  "temp_path": "C:\\Windows\\Temp",
+  "table_name": "currency_history",
+  "table_schema": "",
   "begin_date": "",
   "end_date": "",
   "currency_code": {
-	"AUD": 1,
-	"USD": 5,
-	"EUR": 6,
-	"CAD": 7,
-	"RUB": 16,
-	"CNY": 8
+    "AUD": 1,
+    "USD": 5,
+    "EUR": 6,
+    "CAD": 7,
+    "RUB": 16,
+    "CNY": 8
   },
   "connection_string": "your_database_connection_string",
   "mail_message": {
     "from_email": "your_email@example.com",
     "to_emails": ["recipient1@example.com", "recipient2@example.com"],
     "smtp_server": "your_smtp_server",
-    "smtp_port": 25
+    "smtp_port": 25,
+    "smtp_login": "your_smtp_username",
+    "smtp_password": "your_smtp_password"
   }
 }
 ```
