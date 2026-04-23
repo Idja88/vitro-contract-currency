@@ -1,6 +1,6 @@
 import json
 import os
-import urllib
+from urllib.parse import quote
 from datetime import datetime, timedelta
 import pandas as pd
 import requests
@@ -65,9 +65,35 @@ def transform_data(file_path, currencies):
     df_melted['DATE'] = pd.to_datetime(df_melted['DATE'], format='%d.%m.%Y', errors='coerce')
     return df_melted
 
-def connect_to_db(connection_string):
-    connection_uri = f"mssql+pyodbc:///?odbc_connect={urllib.parse.quote_plus(connection_string)}"
-    engine = sa.create_engine(connection_uri, fast_executemany=True, echo=False)
+def connect_to_db(connection_string: str):
+    parts = {}
+    for param in connection_string.split(';'):
+        if '=' in param:
+            key, value = param.split('=', 1)
+            parts[key.strip()] = value.strip().strip('{}')
+    
+    driver = parts.get('Driver') or parts.get('DRIVER')
+    host = parts.get('Server') or parts.get('SERVER')
+    port = parts.get('Port') or parts.get('PORT')
+    database = parts.get('Database') or parts.get('DATABASE')
+    user = parts.get('Uid') or parts.get('UID')
+    password = parts.get('Pwd') or parts.get('PWD')
+    
+    password_encoded = quote(password, safe='')
+    driver_encoded = quote(driver, safe='')
+    
+    # Определяем тип БД на основе driver в строке подключения
+    if "PostgreSQL" in driver:
+        connection_uri = f"postgresql+psycopg2://{user}:{password_encoded}@{host}:{port if port else 5432}/{database}"
+        engine = sa.create_engine(connection_uri)
+        
+    elif "SQL Server" in driver:
+        connection_uri = f"mssql+pyodbc://{user}:{password_encoded}@{host}:{port if port else 1433}/{database}?driver={driver_encoded}"
+        engine = sa.create_engine(connection_uri, fast_executemany=True)
+    
+    else:
+        raise ValueError(f"Unknown database driver: {driver}")
+    
     return engine
 
 def load_data(df, connection_string):
