@@ -104,7 +104,16 @@ def load_data(df: pd.DataFrame, connection_string: str, table_name: str, table_s
     finally:
         engine.dispose()
 
-def send_email(subject: str, message: str, from_email: str, to_emails: list, smtp_server: str, smtp_port: int, smtp_login: str, smtp_password: str):
+def send_email(
+        subject: str,
+        message: str,
+        from_email: str,
+        to_emails: list,
+        smtp_server: str,
+        smtp_port: int,
+        smtp_login: str,
+        smtp_password: str
+) -> None:
     try:
         server = smtplib.SMTP(smtp_server, smtp_port)
         server.starttls()
@@ -121,7 +130,17 @@ def send_email(subject: str, message: str, from_email: str, to_emails: list, smt
     finally:
         server.quit()
 
-def main(url: str, temp_path: str, table_name: str, table_schema: str, rates: list, currencies: list, connection_string: str, begin_date: str, end_date: str):
+def main(
+    url: str,
+    temp_path: str,
+    table_name: str,
+    table_schema: str,
+    rates: list,
+    currencies: list,
+    connection_string: str,
+    begin_date: str,
+    end_date: str
+) -> None:
     file_path = get_exchange_rates(url=url, temp_path=temp_path, rates=rates, begin_date=begin_date, end_date=end_date)
     transformed_df = transform_data(file_path=file_path, currencies=currencies)
     load_data(df=transformed_df, connection_string=connection_string, table_name=table_name, table_schema=table_schema)
@@ -148,16 +167,16 @@ if __name__ == "__main__":
 
     try:
         main(
-            url=url,
-            temp_path=temp_path,
-            table_name=table_name,
-            table_schema=table_schema,
-            rates=rates,
-            currencies=currencies,
-            connection_string=connection_string,
-            begin_date=begin_date,
-            end_date=end_date
-            )
+        url=url,
+        temp_path=temp_path,
+        table_name=table_name,
+        table_schema=table_schema,
+        rates=rates,
+        currencies=currencies,
+        connection_string=connection_string,
+        begin_date=begin_date,
+        end_date=end_date
+        )
     except Exception as e:
         error_message = f"An error occurred: {str(e)}"
         send_email("Error in ETL process", error_message, from_email, to_emails, smtp_server, smtp_port, smtp_login, smtp_password)
