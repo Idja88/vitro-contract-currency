@@ -1,6 +1,5 @@
 import json
 import os
-from urllib.parse import quote
 from datetime import datetime, timedelta
 import pandas as pd
 import requests
@@ -77,18 +76,30 @@ def connect_to_db(connection_string: str) -> sa.engine.base.Engine:
     database = parts.get('Database') or parts.get('DATABASE')
     user = parts.get('Uid') or parts.get('UID')
     password = parts.get('Pwd') or parts.get('PWD')
-    
-    password_encoded = quote(password, safe='')
-    driver_encoded = quote(driver, safe='')
-    
-    # Определяем тип БД на основе driver в строке подключения
-    if "PostgreSQL" in driver:
-        connection_uri = f"postgresql+psycopg2://{user}:{password_encoded}@{host}:{port if port else 5432}/{database}"
-        engine = sa.create_engine(connection_uri)
         
-    elif "SQL Server" in driver:
-        connection_uri = f"mssql+pyodbc://{user}:{password_encoded}@{host}:{port if port else 1433}/{database}?driver={driver_encoded}"
-        engine = sa.create_engine(connection_uri, fast_executemany=True)
+    # Определяем тип БД на основе driver в строке подключения
+    if "postgresql" in driver.lower():
+        connection_url = sa.URL.create(
+            drivername="postgresql+psycopg2",
+            username=user,
+            password=password,
+            host=host,
+            port=port if port else 5432,
+            database=database
+        )
+        engine = sa.create_engine(connection_url)
+        
+    elif "sql server" in driver.lower():
+        connection_url = sa.URL.create(
+            drivername="mssql+pyodbc",
+            username=user,
+            password=password,
+            host=host,
+            port=port if port else 1433,
+            database=database,
+            query={"driver": driver}
+        )
+        engine = sa.create_engine(connection_url, fast_executemany=True)
     
     else:
         raise ValueError(f"Unknown database driver: {driver}")
